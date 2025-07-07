@@ -387,15 +387,7 @@ def debug_files():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-if __name__ == '__main__':
-    # Print configuration on startup
-    print("=== Supabase Configuration ===")
-    print(f"SUPABASE_URL: {SUPABASE_URL[:50]}..." if SUPABASE_URL else "Not configured")
-    print(f"SUPABASE_KEY: {'*' * 20}..." if SUPABASE_KEY else "Not configured")
-    print(f"SUPABASE_BUCKET: {SUPABASE_BUCKET}")
-    print("===============================")
-    
-    app.run(debug=True, port=5000)
+
 # @app.route('/validate-script', methods=['POST'])
 # def validate_script():
 #     try:
@@ -414,14 +406,6 @@ if __name__ == '__main__':
         
 #     except Exception as e:
 #         return jsonify({'error': str(e)}), 500
-
-@app.route('/health')
-def health_check():
-    return jsonify({
-        'status': 'healthy', 
-        'timestamp': datetime.now().isoformat(),
-        'supabase_configured': bool(SUPABASE_URL and SUPABASE_KEY)
-    })
 
 if __name__ == '__main__': 
     app.run()
