@@ -26,10 +26,52 @@ SUPABASE_BUCKET = os.getenv('SUPABASE_BUCKET', 'manim-videos')  # Default bucket
 # Initialize Supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-# Create output directory
-OUTPUT_DIR = 'output'
-if not os.path.exists(OUTPUT_DIR):
-    os.makedirs(OUTPUT_DIR)
+
+def initialize_manim(OUTPUT_DIR):
+    """Initialize Manim on startup to avoid first-request issues"""
+    try:
+        # Create a simple test script to initialize Manim
+        test_script = '''
+from manim import *
+
+class InitTest(Scene):
+    def construct(self):
+        text = Text("Init")
+        self.add(text)
+'''
+        
+        # Create temporary file
+        init_filename = f"init_test_{uuid.uuid4().hex[:8]}"
+        script_path = os.path.join(OUTPUT_DIR, f"{init_filename}.py")
+        
+        with open(script_path, 'w') as f:
+            f.write(test_script)
+        
+        # Run manim command to initialize
+        cmd = [
+            'manim', 
+            f"{init_filename}.py", 
+            'InitTest',  # Specify the scene class name
+            '-ql',  
+            '--output_file', f"{init_filename}.mp4"
+        ]
+        
+        result = subprocess.run(
+            cmd,
+            cwd=OUTPUT_DIR,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        
+        print(f"Manim initialization result: {result.returncode}")
+        if result.returncode != 0:
+            print(f"Init warning: {result.stderr}")
+            
+    except Exception as e:
+        print(f"Manim initialization error: {e}")
+
+
 
 def validate_manim_script(script_content):
     """Basic validation of Manim script"""
@@ -109,7 +151,7 @@ def save_video_metadata(filename, public_url, script_content, render_time):
     except Exception as e:
         return None, f"Error saving metadata: {str(e)}"
 
-def render_manim_video(script_content, filename):
+def render_manim_video(script_content, filename,OUTPUT_DIR):
     """Render Manim script to video"""
     try:
         # Create temporary Python file
@@ -151,6 +193,8 @@ def render_manim_video(script_content, filename):
             else:
                 return None, "Video file was not generated despite successful command execution"
         else:
+            print(f"First attempt failed, retrying... Error")
+            
             error_msg = f"Manim rendering failed: {result.stderr}"
             print(error_msg)
             return None, error_msg
@@ -181,9 +225,10 @@ def render_video():
             filename = f"manim_{uuid.uuid4().hex[:8]}_{int(datetime.now().timestamp())}"
         
         render_start_time = datetime.now()
-        
+        OUTPUT_DIR = tempfile.mkdtemp(prefix='manim_')
+        initialize_manim(OUTPUT_DIR)
         # Render video
-        video_path, error = render_manim_video(script, filename)
+        video_path, error = render_manim_video(script, filename,OUTPUT_DIR)
         print("Final video path:", video_path)
 
         if error or not video_path:
@@ -233,16 +278,10 @@ def render_video():
             # Clean up local files only if upload was successful
         try:
             print(f"Cleaning up local files...")
-            media_dir = os.path.join(OUTPUT_DIR, "media")
-            if os.path.exists(media_dir):
-                shutil.rmtree(media_dir)
-                print(f"Deleted media directory: {media_dir}")
-            
-            script_path = os.path.join(OUTPUT_DIR, f"{filename}.py")
-            if os.path.exists(script_path):
-                os.remove(script_path)
-                print(f"Deleted script file: {script_path}")
-                
+            # media_dir = os.path.join(OUTPUT_DIR, "media")
+            if os.path.exists(OUTPUT_DIR):
+                shutil.rmtree(OUTPUT_DIR)
+                print(f"Deleted media directory: {OUTPUT_DIR}")
             response_data['cleanup_success'] = True
             
         except Exception as cleanup_error:
@@ -360,33 +399,6 @@ def test_supabase():
             'bucket_name': SUPABASE_BUCKET
         }), 500
 
-@app.route('/debug/files', methods=['GET'])
-def debug_files():
-    """Debug endpoint to check local files"""
-    try:
-        files_info = []
-        
-        if os.path.exists(OUTPUT_DIR):
-            for root, dirs, files in os.walk(OUTPUT_DIR):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    file_info = {
-                        'filename': file,
-                        'path': file_path,
-                        'size': os.path.getsize(file_path),
-                        'modified': datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat()
-                    }
-                    files_info.append(file_info)
-        
-        return jsonify({
-            'output_dir_exists': os.path.exists(OUTPUT_DIR),
-            'files': files_info,
-            'total_files': len(files_info)
-        })
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 
 # @app.route('/validate-script', methods=['POST'])
 # def validate_script():
@@ -408,4 +420,4 @@ def debug_files():
 #         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__': 
-    app.run()
+    app.run(debug=True,use_reloader=False)
