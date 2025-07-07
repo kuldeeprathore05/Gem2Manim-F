@@ -53,6 +53,7 @@ class InitTest(Scene):
             f"{init_filename}.py", 
             'InitTest',  # Specify the scene class name
             '-ql',  
+            '--disable_caching',
             '--output_file', f"{init_filename}.mp4"
         ]
         
