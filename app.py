@@ -263,17 +263,17 @@ def render_video():
             response_data['public_url'] = public_url
             response_data['message'] = 'Video rendered and uploaded successfully'
             
-            # Save metadata to database only if upload was successful
-            metadata, metadata_error = save_video_metadata(
-                video_filename, 
-                public_url, 
-                script, 
-                render_duration
-            )
+            # # Save metadata to database only if upload was successful
+            # metadata, metadata_error = save_video_metadata(
+            #     video_filename, 
+            #     public_url, 
+            #     script, 
+            #     render_duration
+            # )
             
-            if metadata_error:
-                print(f"Metadata save error: {metadata_error}")
-                response_data['metadata_warning'] = f'Metadata save failed: {metadata_error}'
+            # if metadata_error:
+            #     print(f"Metadata save error: {metadata_error}")
+            #     response_data['metadata_warning'] = f'Metadata save failed: {metadata_error}'
             
             # Clean up local files only if upload was successful
         try:
