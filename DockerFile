@@ -38,7 +38,7 @@ ENV NIXPACKS_PATH=/opt/venv/bin:$NIXPACKS_PATH
 COPY requirements.txt .
 
 # Create virtual environment and install packages
-RUN --mount=type=cache,id=s/96b645ee-73b4-477b-9e67-6060f4a0ac86-/root/cache/pip,target=/root/.cache/pip \
+RUN --mount=type=cache,target=/root/.cache/pip \
     python -m venv --copies /opt/venv && \
     . /opt/venv/bin/activate && \
     pip install --upgrade pip setuptools wheel && \
