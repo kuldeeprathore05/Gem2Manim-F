@@ -27,50 +27,50 @@ SUPABASE_BUCKET = os.getenv('SUPABASE_BUCKET', 'manim-videos')  # Default bucket
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 
-def initialize_manim(OUTPUT_DIR):
-    """Initialize Manim on startup to avoid first-request issues"""
-    try:
-        # Create a simple test script to initialize Manim
-        test_script = '''
-from manim import *
+# def initialize_manim(OUTPUT_DIR):
+#     """Initialize Manim on startup to avoid first-request issues"""
+#     try:
+#         # Create a simple test script to initialize Manim
+#         test_script = '''
+# from manim import *
 
-class InitTest(Scene):
-    def construct(self):
-        text = Text("Init")
-        self.add(text)
-'''
+# class InitTest(Scene):
+#     def construct(self):
+#         text = Text("Init")
+#         self.add(text)
+# '''
         
-        # Create temporary file
-        init_filename = f"init_test_{uuid.uuid4().hex[:8]}"
-        script_path = os.path.join(OUTPUT_DIR, f"{init_filename}.py")
+#         # Create temporary file
+#         init_filename = f"init_test_{uuid.uuid4().hex[:8]}"
+#         script_path = os.path.join(OUTPUT_DIR, f"{init_filename}.py")
         
-        with open(script_path, 'w') as f:
-            f.write(test_script)
+#         with open(script_path, 'w') as f:
+#             f.write(test_script)
         
-        # Run manim command to initialize
-        cmd = [
-            'manim', 
-            f"{init_filename}.py", 
-            'InitTest',  # Specify the scene class name
-            '-ql',  
-            '--disable_caching',
-            '--output_file', f"{init_filename}.mp4"
-        ]
+#         # Run manim command to initialize
+#         cmd = [
+#             'manim', 
+#             f"{init_filename}.py", 
+#             'InitTest',  # Specify the scene class name
+#             '-ql',  
+#             '--disable_caching',
+#             '--output_file', f"{init_filename}.mp4"
+#         ]
         
-        result = subprocess.run(
-            cmd,
-            cwd=OUTPUT_DIR,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
+#         result = subprocess.run(
+#             cmd,
+#             cwd=OUTPUT_DIR,
+#             capture_output=True,
+#             text=True,
+#             timeout=60
+#         )
         
-        print(f"Manim initialization result: {result.returncode}")
-        if result.returncode != 0:
-            print(f"Init warning: {result.stderr}")
+#         print(f"Manim initialization result: {result.returncode}")
+#         if result.returncode != 0:
+#             print(f"Init warning: {result.stderr}")
             
-    except Exception as e:
-        print(f"Manim initialization error: {e}")
+#     except Exception as e:
+#         print(f"Manim initialization error: {e}")
 
 
 
@@ -227,7 +227,7 @@ def render_video():
         
         render_start_time = datetime.now()
         OUTPUT_DIR = tempfile.mkdtemp(prefix='manim_')
-        initialize_manim(OUTPUT_DIR)
+        # initialize_manim(OUTPUT_DIR)
         # Render video
         video_path, error = render_manim_video(script, filename,OUTPUT_DIR)
         print("Final video path:", video_path)
