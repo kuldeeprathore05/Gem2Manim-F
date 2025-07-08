@@ -50,5 +50,6 @@ COPY . .
 # Expose port (adjust if needed)
 EXPOSE 8000
 
+
 # Activate virtual environment and run the application
 CMD ["/opt/venv/bin/python", "-m", "gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
